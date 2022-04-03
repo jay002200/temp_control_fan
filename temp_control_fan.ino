@@ -8,11 +8,11 @@
 #include <WiFiUdp.h>
 
 // Set IFTTT Webhooks event name and key
-#define IFTTT_Key "cgBvudCWATDW8cXgxD75bP"
+#define IFTTT_Key "-"
 #define IFTTT_Event "mining_temp"
 
 #define relayPin 5
-#define Line_Token "RzciP66QKdFgRFtDDY9HK15dXqKtQ3x8MncnpUuJMyW"
+#define Line_Token "-"
 
 const int httpPort = 80;
 const char* host = "maker.ifttt.com";
@@ -40,7 +40,7 @@ void setup()
 {
     Serial.begin(9600);
     dht.begin();
-    WiFi.begin("ASUS_4C", "0933547264");
+    WiFi.begin("-", "-");
     Serial.println(WiFi.localIP());
     pinMode(relayPin, OUTPUT);
     pinMode(0, OUTPUT);
