@@ -3,19 +3,17 @@
 #include <WiFiClient.h>
 #include <TridentTD_LineNotify.h>
 #include <ESP8266HTTPClient.h>
-#include "AnotherIFTTTWebhook.h"
 #include <NTPClient.h>
 #include <WiFiUdp.h>
-
 // Set IFTTT Webhooks event name and key
-#define IFTTT_Key "-"
-#define IFTTT_Event "mining_temp"
 
 #define relayPin 5
 #define Line_Token "-"
+#define port 80
+#define host "api.thingspeak.com"
 
-const int httpPort = 80;
-const char* host = "maker.ifttt.com";
+String GET = "GET /update?key=-";
+const char *server = "api.thingspeak.com";
 
 DHT dht(4, DHT22);
 int count = 0;
@@ -27,6 +25,7 @@ String timeStamp;
 
 WiFiUDP wifiudp;
 NTPClient timeClient(wifiudp);
+WiFiClient client;
 
 void return_temp(void *parameter)
 {
@@ -50,13 +49,14 @@ void setup()
 
 void loop()
 {
-    while(!timeClient.update()) {
-    timeClient.forceUpdate();
-  }
+    while (!timeClient.update())
+    {
+        timeClient.forceUpdate();
+    }
     formattedDate = timeClient.getFormattedDate();
     int splitT = formattedDate.indexOf("T");
     dayStamp = formattedDate.substring(0, splitT);
-    timeStamp = formattedDate.substring(splitT+1, formattedDate.length()-1);
+    timeStamp = formattedDate.substring(splitT + 1, formattedDate.length() - 1);
     LINE.setToken(Line_Token);
 
     float t = dht.readTemperature();
@@ -93,11 +93,27 @@ void loop()
         char c[10];
         char day[100];
         char time[100];
-        sprintf(day,"%s",dayStamp);
-        sprintf(time,"%s",timeStamp);
-        sprintf(c,"%.1f",t);
-        send_webhook(IFTTT_Event,IFTTT_Key,day,time,c);     
-        LINE.notify("目前溫度:" + String(t));
-        count = 0;
+        sprintf(day, "%s", dayStamp);
+        sprintf(time, "%s", timeStamp);
+        sprintf(c, "%.1f", t);
+
+        if (!client.connect(host, port))
+        {
+            Serial.println("connection failed");
+            return;
+        }
+        else
+        {
+            String getStr = GET + "&field1=" + c +
+                            " HTTP/1.1\r\n";
+            client.print(getStr);
+            client.print("Host: api.thingspeak.com\n");
+            client.print("Connection: close\r\n\r\n");
+
+            LINE.notify("目前溫度:" + String(t));
+            count = 0;
+
+            client.stop();
+        }
     }
 }
